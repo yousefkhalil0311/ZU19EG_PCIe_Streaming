@@ -122,6 +122,34 @@ void QC_app(){
 	}
 }
 
+
+//Initialized the passed unordered map with a specified schema
+void initParamMap(unordered_map<Params, int>& map, schema_t* schema){
+	for(uint32_t paramNum = 0; paramNum < *schema->numParams; paramNum++){
+
+		//get param string from schema struct
+		string paramName = schema->params[paramNum]->keyString;
+
+		//get param value from schema struct
+		int paramValue = static_cast<int>(*schema->params[paramNum]->valData);
+
+		//find the enum Params corresponding to param String
+		auto it = BRAMParamMapping.find(paramName);
+
+		//Verify param is expected
+		if (it != BRAMParamMapping.end()){
+
+			//set param value in the map
+			map[it->second] = paramValue;
+
+		}
+		else{
+			cout << "Failed to map parameter: " << paramName << " : unexpected param." << endl;
+		}
+
+	}
+}
+
 void sysInit(){
 
 	cout << "Initializing" << endl;
@@ -130,5 +158,27 @@ void sysInit(){
 	GPIO_Init(&Sys_GPIO, Sys_GPIO_ID, 1, 0x0, 0x0);
 
 	SPI_Init(&FE_SPI, FE_SPI_ID);
+
+	cout << "Initializing Schema";
+	int Status = FAILURE;
+	int attemptNum = 0;
+
+	while(attemptNum < 10 && Status == FAILURE){
+
+		cout << ".";
+
+		Status = initSchema();
+
+	}
+
+	if (Status == SUCCESS){
+		cout << "SUCCESS" << endl;
+	}
+	else{
+		cout << "FAILURE to intialize SCHEMA" << endl;
+	}
+
+	Status = initParamMap(&paramMap, &QC_SCHEMA);
+
 
 }

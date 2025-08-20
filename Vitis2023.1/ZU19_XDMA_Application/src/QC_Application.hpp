@@ -19,6 +19,7 @@
 //Project specific includes
 #include "schema_v1.hpp"
 #include "hardwareInit.hpp"
+#include "parameterMappings.hpp"
 
 #define BRAM_BASE_ADDRESS	XPAR_AXI_BRAM_CTRL_1_S_AXI_BASEADDR
 #define DDC_BASE_ADDRESS	XPAR_DUT_IP_0_BASEADDR

@@ -55,20 +55,20 @@ typedef struct{
 	//memory location of bram_param_t in bram
 	volatile uint32_t* address;
 
-	//key length in chars (max 20)
-	volatile uint32_t* numBytesForKey;
-
 	//address to id of param
 	volatile uint32_t* paramID;
+
+	//key length in chars (max 20)
+	volatile uint32_t* keySize;
 
 	//address to key string of param in bram
 	volatile uint32_t* keyData;
 
-	//store key. Used for validation when edited
-	char keyString[KEYSTRING_MAX_LENGTH];
-
 	//address to value of param in bram
 	volatile uint32_t* valData;
+i
+	//store key. Used for validation when edited
+	char keyString[KEYSTRING_MAX_LENGTH];
 
 } bram_param_t;
 
@@ -106,19 +106,25 @@ typedef struct{
 	//number of parameters
 	volatile uint32_t* numParams;
 
-	uint32_t lastParam;
+	//number of parameters
+	bram_data_t endHeader;
 
 	//Start param token
 	uint32_t paramStart;
 
+	//array pointing to parameter structs
+	bram_param_t* params[MAX_PARAMS];
+
+	//keyValue separator
+	uint32_t keyValSep;
+
 	//End param token
 	uint32_t paramEnd;
 
+	uint32_t lastParam;
+
 	//token to specify end of bram usage
 	uint32_t endToken;
-
-	//array pointing to parameter structs
-	bram_param_t* params[MAX_PARAMS];
 
 } schema_t;
 
