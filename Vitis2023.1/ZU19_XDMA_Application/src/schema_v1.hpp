@@ -3,6 +3,9 @@
 //standard C includes
 #include <stdint.h>
 
+//C++ includes
+#include <new>
+
 //Xilinx specific includes
 #include <xparameters.h>
 
@@ -21,8 +24,8 @@
 #define LAST_PARAM_END_TOKEN	0xABABABAB	//Indicate end of parameter space in bram
 #define BRAM_END_TOKEN			0xEEEEEEEE	//Indicate end of bram usage (host has not written past this point)
 
-#define KEYSTRING_MAX_LENGTH 	20
-#define MAX_PARAMS				50
+#define KEYSTRING_MAX_LENGTH 	40
+#define MAX_PARAMS				100
 
 //host communication status register
 #define HOST_PARAM_CHANGE	(1 << 31)
@@ -66,7 +69,7 @@ typedef struct{
 
 	//address to value of param in bram
 	volatile uint32_t* valData;
-i
+
 	//store key. Used for validation when edited
 	char keyString[KEYSTRING_MAX_LENGTH];
 
@@ -113,7 +116,7 @@ typedef struct{
 	uint32_t paramStart;
 
 	//array pointing to parameter structs
-	bram_param_t* params[MAX_PARAMS];
+	bram_param_t params[MAX_PARAMS];
 
 	//keyValue separator
 	uint32_t keyValSep;
@@ -144,6 +147,9 @@ void resetStatusBit(uint32_t mask);
 
 //returns whether the 2 params are equal
 bool assertEquals(uint32_t value, uint32_t expected);
+
+//returns whether the 2 params are equal
+bool assertInRange(uint32_t value, uint32_t low, uint32_t high);
 
 //call any time schema differs from expected results. Will signal to host that schema setup failed
 void failSchemaSetup();

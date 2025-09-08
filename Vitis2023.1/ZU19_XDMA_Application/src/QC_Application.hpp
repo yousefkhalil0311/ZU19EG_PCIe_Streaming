@@ -41,9 +41,11 @@
 #define NOISE_AMP_BIT 	(1 << 0)
 #define CAL_SW_BIT 		(1 << 1)
 
+//clear serial terminal screen
+void clearTerminal();
 
 //entry point to application. Separate from main because this project will become a submodule to a larger system once validated
 void QC_app();
 
 //basic setup of hardware. gpio & spi devices
-void sysInit();
+bool sysInit();

@@ -9,7 +9,7 @@ schema_t QC_SCHEMA = {
 		.numParams 	= START_ADR + 0x05,
 		.endHeader 	= {START_ADR + 0x06, HEADER_TOKEN},
 		.paramStart = PARAM_START_TOKEN,
-		.params 	= {nullptr},
+		.params 	= {},
 		.keyValSep	= KEY_VALUE_SEP_TOKEN,
 		.paramEnd 	= BRAM_END_TOKEN,
 		.lastParam 	= LAST_PARAM_END_TOKEN,
@@ -28,12 +28,11 @@ bool enableIndependentOp(){
 
 //get status bit from bram status register
 bool getStatusBit(uint32_t mask){
-	return *(QC_SCHEMA.status) | mask;
+	return *(QC_SCHEMA.status) & mask;
 }
 
 //set status bit in bram status register
 void setStatusBit(uint32_t mask){
-	QC_print("Enabling independent operation.\n");
 	*(QC_SCHEMA.status) |= mask;
 
 }
@@ -71,6 +70,10 @@ void failSchemaSetup(){
 //store characters from bram register into parameter's keyString element
 void bramCharsToKeyStrings(int param, volatile uint32_t* ptr, uint32_t numChars){
 
+	if (numChars >= KEYSTRING_MAX_LENGTH){
+		numChars = KEYSTRING_MAX_LENGTH - 1;
+	}
+
 	for (uint32_t charNum = 0; charNum < numChars; charNum++){
 
 		//4 chars per address (4 chars per uint32_t)
@@ -78,15 +81,18 @@ void bramCharsToKeyStrings(int param, volatile uint32_t* ptr, uint32_t numChars)
 
 		uint32_t byteOffset = charNum % 4;
 
-		QC_SCHEMA.params[param]->keyString[charNum] = (char)((*(ptr + addrOffset) >> (8 * (3 - byteOffset))) & 0xFF);
+		QC_SCHEMA.params[param].keyString[charNum] = (char)((*(ptr + addrOffset) >> (8 * byteOffset)) & 0xFF);
 	}
+
+	//null terminate string
+	QC_SCHEMA.params[param].keyString[numChars] = '\0';
 
 }
 
 bool initSchema(){
 
-	if (*(QC_SCHEMA.status) | HOST_IND_OP_REQUEST){
-		return enableIndependentOp();
+	if (*(QC_SCHEMA.status) & HOST_IND_OP_REQUEST){
+		//return enableIndependentOp();
 	}
 
 	//set bram register for device version for host to read
@@ -139,21 +145,27 @@ bool initSchema(){
 			return Status;
 		}
 
-		//Instantiate param pointer
-		QC_SCHEMA.params[param] = new bram_param_t;
-
 		//Set param pointers
-		QC_SCHEMA.params[param]->address = bramPtr++;
-		QC_SCHEMA.params[param]->paramID = bramPtr++;
-		QC_SCHEMA.params[param]->keySize = bramPtr++;
+		QC_SCHEMA.params[param].address = bramPtr++;
+		QC_SCHEMA.params[param].paramID = bramPtr++;
+		QC_SCHEMA.params[param].keySize = bramPtr++;
 
 		//bram for keyData will hold offset from current location to start of keyString
 		//following was done to get global location of keyString
-		QC_SCHEMA.params[param]->keyData = bramPtr + *(bramPtr++);
-		QC_SCHEMA.params[param]->valData = bramPtr++;
+		uint32_t offset = *bramPtr;
+
+		if (offset > 10){
+			QC_print("Very large offset found!!!!\n");
+			failSchemaSetup();
+			return FAILURE;
+		}
+
+		QC_SCHEMA.params[param].keyData = bramPtr + offset;
+		bramPtr++;
+		QC_SCHEMA.params[param].valData = bramPtr++;
 
 		//make sure key size is within limits
-		Status = assertInRange(*(QC_SCHEMA.params[param]->keySize), 0, KEYSTRING_MAX_LENGTH);
+		Status = assertInRange(*(QC_SCHEMA.params[param].keySize), 0, KEYSTRING_MAX_LENGTH);
 		if(Status == FAILURE){
 			QC_print("Invalid key length from host at param index %d\n", param);
 			failSchemaSetup();
@@ -169,17 +181,17 @@ bool initSchema(){
 		}
 
 		//make sure param key string is at the host specified location by comparing first 4 bytes
-		Status = assertEquals(*bramPtr, *(QC_SCHEMA.params[param]->keyData));
+		//Status = assertEquals(*bramPtr, *(QC_SCHEMA.params[param]->keyData));
 		if(Status == FAILURE){
 			QC_print("Invalid key String address at param index %d\n", param);
 			failSchemaSetup();
 			return Status;
 		}
 
-		bramCharsToKeyStrings(param, QC_SCHEMA.params[param]->keyData, *(QC_SCHEMA.params[param]->keySize));
+		bramCharsToKeyStrings(param, bramPtr, *(QC_SCHEMA.params[param].keySize));
 
 		//set ptr to endParamToken
-		bramPtr += KEYSTRING_MAX_LENGTH / 4;
+		bramPtr += (*QC_SCHEMA.params[param].keySize / 4) + 1;
 
 		//make sure the parameter ends with and endParam token
 		Status = assertEquals(*bramPtr++, QC_SCHEMA.paramEnd);
@@ -198,6 +210,8 @@ bool initSchema(){
 		failSchemaSetup();
 		return Status;
 	}
+
+
 
 
 	return SUCCESS;

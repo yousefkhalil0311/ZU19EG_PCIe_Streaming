@@ -66,7 +66,7 @@ unordered_map<Params, int> systemParamMap = {
 		{DDC2_FMIX, 0},
 		{DDC2_SFOUT, 0},
 
-		{ATTENUATION_BVAL, 64},
+		{ATTENUATION_BVAL, 63},
 
 		{LP500MHZ_EN, 1},
 		{LP1GHZ_EN, 0},

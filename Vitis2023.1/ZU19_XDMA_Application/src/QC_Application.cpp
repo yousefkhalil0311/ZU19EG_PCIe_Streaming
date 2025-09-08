@@ -19,7 +19,7 @@ volatile u32* bram = (volatile u32*)BRAM_BASE_ADDRESS;
 //Pointer to DDC block register space
 volatile u32* DDC = (volatile u32*)DDC_BASE_ADDRESS;
 
-unordered_map<string, int> paramMap;
+unordered_map<Params, int> paramMap;
 
 /*
  * entry point to application.
@@ -28,19 +28,30 @@ unordered_map<string, int> paramMap;
  *
  */
 
+//clear serial terminal screen
+void clearTerminal(){
+	printf("\033[2J\033[H");
+	return;
+}
+
 void QC_app(){
 
-	paramMap["param1"] = 1;
+	bool status = sysInit();
 
-	xil_printf("Value written to paramMap['param1']: %d\n", paramMap["param1"]);
-
+	while(status == SUCCESS){
+		clearTerminal();
+		for (int offset = 0; offset < 150; offset+=3){
+			QC_print("BRAM[%d] = 0x%X\t\t\tBRAM[%d] = 0x%X\t\t\tBRAM[%d] = 0x%X\n", offset, bram[offset], offset+1, bram[offset+1], offset+2, bram[offset+2]);
+		}
+		sleep(1);
+	}
 
 	xil_printf("Writing values to Ram\n");
 	int index = 0x100>>2;
 	DDC[index] = 12;
 	DDC[index + 1] = 11;
 
-	while(1){
+	while(0){
 		for(uint16_t i = 1; i < 600; i+=10){
 			DDC[index] = i;
 			usleep(3000000);
@@ -124,17 +135,30 @@ void QC_app(){
 
 
 //Initialized the passed unordered map with a specified schema
-void initParamMap(unordered_map<Params, int>& map, schema_t* schema){
-	for(uint32_t paramNum = 0; paramNum < *schema->numParams; paramNum++){
+bool initParamMap(unordered_map<Params, int>& map, schema_t* schema){
+
+	int numParams = *schema->numParams;
+	QC_print("params on BRAM: %d\n", numParams);
+	if(!assertInRange(numParams, 0, MAX_PARAMS)){
+		QC_print("Corrupt number of params on BRAM: %d\n", numParams);
+		return false;
+	}
+
+	for(int paramNum = 0; paramNum < numParams; paramNum++){
+
+		QC_print("ParamNum %d\n", paramNum);
 
 		//get param string from schema struct
-		string paramName = schema->params[paramNum]->keyString;
+		string paramName = schema->params[paramNum].keyString;
 
 		//get param value from schema struct
-		int paramValue = static_cast<int>(*schema->params[paramNum]->valData);
+		int paramValue = static_cast<int>(*schema->params[paramNum].valData);
 
 		//find the enum Params corresponding to param String
 		auto it = BRAMParamMapping.find(paramName);
+
+		QC_print("paramName: %s\nparamVal: %d\n", paramName.c_str(), paramValue);
+
 
 		//Verify param is expected
 		if (it != BRAMParamMapping.end()){
@@ -144,41 +168,53 @@ void initParamMap(unordered_map<Params, int>& map, schema_t* schema){
 
 		}
 		else{
-			cout << "Failed to map parameter: " << paramName << " : unexpected param." << endl;
-		}
 
+			cout << "Failed to map parameter " << paramNum << ": " << paramName << " : unexpected param." << endl;
+
+			return false;
+
+		}
 	}
+
+	return true;
+
 }
 
-void sysInit(){
+bool sysInit(){
 
-	cout << "Initializing" << endl;
+	QC_print("Initializing...\n");
 
 	GPIO_Init(&FE_GPIO, FE_GPIO_ID, 1, 0x0, 0x0);
 	GPIO_Init(&Sys_GPIO, Sys_GPIO_ID, 1, 0x0, 0x0);
 
 	SPI_Init(&FE_SPI, FE_SPI_ID);
 
-	cout << "Initializing Schema";
+	QC_print("Initializing Schema\n");
 	int Status = FAILURE;
 	int attemptNum = 0;
 
-	while(attemptNum < 10 && Status == FAILURE){
+	while(attemptNum++ < 10 && Status == FAILURE){
 
-		cout << ".";
+		QC_print(".\n");
 
 		Status = initSchema();
 
 	}
 
 	if (Status == SUCCESS){
-		cout << "SUCCESS" << endl;
+		cout << "SCHEMA Init SUCCESS" << endl;
 	}
 	else{
+
 		cout << "FAILURE to intialize SCHEMA" << endl;
+
+		return FAILURE;
+
 	}
 
-	Status = initParamMap(&paramMap, &QC_SCHEMA);
+	Status = initParamMap(systemParamMap, &QC_SCHEMA);
+
+	return Status;
 
 
 }
