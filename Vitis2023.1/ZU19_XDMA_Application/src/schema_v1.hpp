@@ -139,11 +139,17 @@ bool enableIndependentOp();
 //get status bit from bram status register
 bool getStatusBit(uint32_t mask);
 
+//get param # that host changed from bram status register
+uint16_t getStatusParamChanged();
+
 //set status bit in bram status register
 void setStatusBit(uint32_t mask);
 
 //reset status bit in bram status register
 void resetStatusBit(uint32_t mask);
+
+//get # of params set up during intiailization
+uint16_t getNumParams();
 
 //returns whether the 2 params are equal
 bool assertEquals(uint32_t value, uint32_t expected);

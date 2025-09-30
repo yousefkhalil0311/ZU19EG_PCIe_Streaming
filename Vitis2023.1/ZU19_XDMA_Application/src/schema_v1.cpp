@@ -31,6 +31,11 @@ bool getStatusBit(uint32_t mask){
 	return *(QC_SCHEMA.status) & mask;
 }
 
+//get param # that host changed from bram status register
+uint16_t getStatusParamChanged(){
+	return *(QC_SCHEMA.status) & 0xFFFF;
+}
+
 //set status bit in bram status register
 void setStatusBit(uint32_t mask){
 	*(QC_SCHEMA.status) |= mask;
@@ -40,6 +45,11 @@ void setStatusBit(uint32_t mask){
 //reset status bit in bram status register
 void resetStatusBit(uint32_t mask){
 	*(QC_SCHEMA.status) &= ~mask;
+}
+
+//get # of params set up during intiailization
+uint16_t getNumParams(){
+	return *(QC_SCHEMA.numParams);
 }
 
 //returns whether the 2 params are equal
