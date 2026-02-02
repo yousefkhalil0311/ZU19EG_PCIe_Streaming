@@ -1,8 +1,8 @@
 ADC PCIe Data Visualizer
-This project implements a high-performance digital backend on a Xilinx ZU19EG device for capturing and streaming ADC data from two AD9209 chips over PCIe to a Python GUI running on the host PC. The GUI also provides control functionality for the hardware, enabling end-to-end data acquisition and system configuration.ADC PCIe Data Visualizer
-This project implements a digital backend on a Xilinx ZU19EG device for capturing and streaming ADC data from two AD9209 chips over PCIe to a Python GUI running on the host PC. The GUI also provides control functionality for the hardware, enabling full data acquisition and system configuration.
 
-Features
+This project implements a high-performance digital backend on a Xilinx ZU19EG device for capturing and streaming data over PCIe to a Python GUI running on the host PC. This project is a subsystem of a larger system and is designed to operate on an independent SoC core (Verified in final implementation).
+
+Features 
 Real-time streaming of 8 ADC channels (4 per AD9209)
 
 Hardware control from the Python GUI (resets, clocks, parameter updates)
