@@ -191,7 +191,7 @@ bool initSchema(){
 		}
 
 		//make sure param key string is at the host specified location by comparing first 4 bytes
-		//Status = assertEquals(*bramPtr, *(QC_SCHEMA.params[param]->keyData));
+		Status = assertEquals(*bramPtr, *(QC_SCHEMA.params[param].keyData));
 		if(Status == FAILURE){
 			QC_print("Invalid key String address at param index %d\n", param);
 			failSchemaSetup();

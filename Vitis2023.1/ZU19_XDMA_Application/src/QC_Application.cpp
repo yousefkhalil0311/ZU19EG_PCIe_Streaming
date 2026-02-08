@@ -30,7 +30,7 @@ unordered_map<Params, int> paramMap;
 
 //clear serial terminal screen
 void clearTerminal(){
-	printf("\033[2J\033[H");
+	QC_print("\033[2J\033[H");
 	return;
 }
 
@@ -111,7 +111,7 @@ bool initParamMap(unordered_map<Params, int>& map, schema_t* schema){
 		}
 		else{
 
-			cout << "Failed to map parameter " << paramNum << ": " << paramName << " : unexpected param." << endl;
+			QC_print("Failed to map parameter %d: %s : unexpected param.\n", paramNum, paramName.c_str());
 
 			return FAILURE;
 
@@ -338,12 +338,11 @@ bool sysInit(){
 	}
 
 	if (Status == SUCCESS){
-		cout << "SCHEMA Init SUCCESS" << endl;
+		QC_print("SCHEMA Init SUCCESS\n");
 	}
 	else{
 
-		cout << "FAILURE to intialize SCHEMA" << endl;
-
+		QC_print("FAILURE to intialize SCHEMA\n");
 		return FAILURE;
 
 	}
@@ -352,12 +351,11 @@ bool sysInit(){
 	Status = initParamMap(systemParamMap, &QC_SCHEMA);
 
 	if (Status == SUCCESS){
-		cout << "Param Map Init SUCCESS" << endl;
+		QC_print("Param Map Init SUCCESS\n");
 	}
 	else{
 
-		cout << "FAILURE to intialize parameter map" << endl;
-
+		QC_print("FAILURE to intialize parameter map\n");
 		return FAILURE;
 
 	}
